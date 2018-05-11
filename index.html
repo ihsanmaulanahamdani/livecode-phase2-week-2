@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+  <!-- development version, includes helpful console warnings -->
+  <title>Live Code</title>
+  <style>
+    .border-div {
+      border: 1px solid black;
+      margin: 3px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <div class="row">
+      <div class="col border-div">
+        <div class="form-group">
+          <p class="alert alert-danger" v-if="error">{{ error }}</p>
+          <p class="alert alert-success" v-else>{{ success }}</p>
+          <label for="exampleInputEmail1">Email address</label>
+          <input type="text" class="form-control" v:model="email" placeholder="Enter email">
+          <small class="form-text text-muted">We'll never share your email with anyone else.</small>
+        </div>
+        <div class="form-group">
+          <label for="exampleInputName1">Name</label>
+          <input type="text" class="form-control" v:model="name" placeholder="name">
+        </div>
+        <button type="submit" class="btn btn-primary" @click="addToken()">Submit</button>
+      </div>
+      
+      <div class="col border-div">
+        <div class="form-group">
+          <p class="alert alert-danger" v-if="error">{{ error }}</p>
+          <p class="alert alert-success" v-else>{{ success }}</p>
+          <label for="exampleInputPhoto1">Input Photo</label>
+          <input type="file" class="form-control" @change="uploadHandler()">
+        </div>
+        <button type="submit" class="btn btn-primary" @click="uploadPhoto()">Submit</button>
+      </div>
+  
+      <div class="col border-div">
+        <label for="getPhoto">Photo</label> 
+        <div class="card" v-for="list in listPhoto" style="width: 18rem;">
+          <img class="card-img-top" :src="list.url" alt="Card image cap">
+        </div>
+      </div>
+    </div>
+    </div>
+
+  <script>
+    const app = new Vue({
+      el: '#app',
+      data: {
+        email: '',
+        name: '',
+        photo: '',
+        listPhoto: [],
+        error: '',
+        success: ''
+      },
+      methods: {
+        addToken: function () {
+          axios.post('http://35.198.212.156/request-token', {
+            email: this.email,
+            name: this.name
+          })
+          .then(response => {
+            if (response.data.uid) {
+              this.success = 'Add token sucess'
+              localStorage.setItem('authorization', response.data.uid)
+            }
+          })
+          .catch(err => {
+            this.error = err
+          })
+        },
+        uploadPhoto: function () {
+          let formData = new FormData()
+
+          formData.append('photo', this.photo)
+
+          axios.post('http://35.198.212.156/api/image', formData, {
+            'Content-Type': 'multipart/form-data',
+            authorization: localStorage.getItem('authorization')
+          })
+          .then(response => {
+            this.success = 'upload photo sucess'
+          })
+          .catch(err => {
+            this.error = err
+          })
+        },
+        uploadHandler: function (event) {
+          this.video = event.target.files[0]
+        },
+        getPhoto: function () {
+          axios.get('http://35.198.212.156/api/image', {
+            headers: {
+              authorization: localStorage.getItem('authorization')
+            }
+          })
+          .then(response => {
+            this.listPhoto = response.data.result
+          })
+          .catch(err => {
+            this.error = err
+          })
+        }
+      }
+    })
+  </script>
+</body>
+</html>
